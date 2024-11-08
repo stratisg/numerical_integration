@@ -24,21 +24,21 @@ def integrate_naive(x, y):
     return sum
 
 
+def derivative_polynomial(x, coeffs):
+    """Calculate the derivative of a polynomial at point x."""
+    coeffs_mod = [coeff_ * i_coeff for i_coeff, coeff_ in enumerate(coeffs)][1:]
+    
+    return polynomial(x, coeffs_mod)
+
+
 def integrate_polynomial(bounds, coeffs):
     """Exact integral of a polynomial with given bounds and coefficients."""
-    right = polynomial(bounds[1], coeffs)
-
-# def integrate_naive(x, fn, f_args):
-#     """Riemann sum approximation to integral."""
-#     sum = 0
-#     for i_x, x_ in enumerate(x):
-#         if not i_x:
-#             continue
-#         y = fn(x_, **f_args)
-#         delta_x = x[i_x] - x[i_x - 1]
-#         sum += y * delta_x
+    coeffs_mod = [0]
+    for i_coeff, coeff_ in enumerate(coeffs):
+        coeffs_mod.append(coeff_ / (i_coeff + 1))
     
-#     return sum
+    return polynomial(bounds[1], coeffs_mod) - polynomial(bounds[0], coeffs_mod)
+
 
 # def integrate_gauss_hermite(bounds, f, f_args, degree):
 #     """"""
@@ -58,13 +58,19 @@ noise = rng.normal(loc=0, scale=scale_noise, size=len(y_true))
 y_noisy = y_true + noise
 num_integral_true = integrate_naive(x, y_true)
 num_integral_noisy = integrate_naive(x, y_noisy)
-
-print("Exact integral true function: ")
+exact_integral = integrate_polynomial((x_min, x_max), l_coeffs)
+print(f"Exact integral true function: {exact_integral}")
 print(f"Numerical integration true function: {num_integral_true}")
 print(f"Numerical integration noisy function: {num_integral_noisy}")
-
+error_num_true = exact_integral - num_integral_true
+error_num_noisy = exact_integral - num_integral_noisy
+print("Error between exact integral and numerical integration using " \
+      f"noiseless samples: {error_num_true:.3e}")
+print("Error between exact integral and numerical integration using " \
+      f"noisy samples: {error_num_noisy:.3e}")
 plt.figure("Function")
 plt.plot(x, y_true, label="True", linestyle="--")
+# plt.plot(x, derivative_polynomial(x, l_coeffs), label="Derivative", alpha=0.75)
 plt.plot(x, y_noisy, label="Noisy", alpha=0.5)
 plt.legend()
 plt.show()
